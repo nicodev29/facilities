@@ -1,0 +1,55 @@
+version: '3.9'
+
+services:
+
+#  facility-service:
+#    build:
+#      context: ./facility-service
+#      dockerfile: ./Dockerfile
+#    image: facility-service
+#    container_name: facility-service
+#    restart: unless-stopped
+#    environment:
+#      - JAVA_OPTS=-Dspring.profiles.active=$ENVIRONMENT -Xmx256m -Xms256m
+#    ports:
+#      - '8083:8083'
+#    depends_on:
+#      - facility-service-database
+#    networks:
+#      - service-network
+
+  facility-service-database:
+    image: mongo:latest
+    container_name: facility-service-database
+    hostname: facility-service-database
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: $FACILITY_SERVICE_DATASOURCE_USER
+      MONGO_INITDB_ROOT_PASSWORD: $FACILITY_SERVICE_DATASOURCE_PASSWORD
+    ports:
+      - '27017:27017'
+    volumes:
+      - db:/var/lib/mongodb/data
+    networks:
+      - service-network
+
+  redis:
+    image: 'redis/redis-stack-server:latest'
+    container_name: redis-stack
+    ports:
+      - '6379:6379'
+    volumes:
+      - db:/data
+    environment:
+      - REDIS_ARGS:--save 20 1
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  db:
+
+networks:
+  service-network:
+    driver: bridge
